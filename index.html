@@ -1,0 +1,431 @@
+<!doctype html>
+<html lang="tr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<style>
+:root{color-scheme:light;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+body{margin:0;font-size:14px}
+img{max-width:100%}
+[hidden]{display:none!important}
+</style>
+<title>TicaretKöprü Demo</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo:wght@500;600;700&family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500;600&display=swap">
+<style>
+/* Layout: sabit üst bar + sekmeli görünümler; içerik 1100px kolonda, dar ekranda tek sütuna iner */
+:root{
+  --bg:#eef1f4; --surface:#ffffff; --surface-2:#f7f9fa;
+  --ink:#111a21; --muted:#5b6b78; --line:#d6dee5;
+  --accent:#0f6b63; --accent-soft:#dcefec; --on-accent:#ffffff;
+  --signal:#a8501b; --signal-soft:#f6e6da;
+  --ok:#1c7a4c; --warn:#8a6400;
+  --display:'Archivo','Segoe UI',system-ui,sans-serif;
+  --body:'IBM Plex Sans','Segoe UI',system-ui,sans-serif;
+  --mono:'IBM Plex Mono',ui-monospace,'Courier New',monospace;
+  --r:10px;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0d1317; --surface:#151e24; --surface-2:#1b262d;
+  --ink:#e4ecf1; --muted:#93a4b1; --line:#253239;
+  --accent:#3fb3a5; --accent-soft:#16312f; --on-accent:#06201e;
+  --signal:#e0975c; --signal-soft:#33241a;
+  --ok:#4cbd84; --warn:#d2a73f;
+  color-scheme:dark;
+}}
+:root[data-theme="dark"]{
+  --bg:#0d1317; --surface:#151e24; --surface-2:#1b262d;
+  --ink:#e4ecf1; --muted:#93a4b1; --line:#253239;
+  --accent:#3fb3a5; --accent-soft:#16312f; --on-accent:#06201e;
+  --signal:#e0975c; --signal-soft:#33241a;
+  --ok:#4cbd84; --warn:#d2a73f;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);line-height:1.5;margin:0}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;letter-spacing:-.01em}
+button{font:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:4px}
+@media (prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:20;background:var(--surface)}
+.wrap{max-width:1100px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+
+/* üst bar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:15;background:var(--surface);border-bottom:1px solid var(--line)}
+.topbar .wrap{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding-block:10px}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--display);font-weight:700;font-size:17px;letter-spacing:-.02em}
+.mark{width:26px;height:26px;border-radius:7px;background:var(--accent);color:var(--on-accent);display:grid;place-items:center;font-size:13px;font-weight:700}
+.demo-tag{font-family:var(--mono);font-size:10.5px;letter-spacing:.08em;text-transform:uppercase;color:var(--signal);background:var(--signal-soft);padding:3px 7px;border-radius:5px}
+.spacer{flex:1 1 auto;min-width:0}
+.tabs{display:flex;gap:2px;overflow-x:auto;width:100%;border-top:1px solid var(--line);padding-top:6px;margin-top:-2px}
+.tab{background:none;border:0;padding:9px 13px;color:var(--muted);font-weight:500;font-size:14px;border-radius:7px;white-space:nowrap}
+.tab[aria-selected="true"]{background:var(--accent-soft);color:var(--accent);font-weight:600}
+.member-chip{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--muted);background:var(--surface-2);border:1px solid var(--line);padding:5px 10px;border-radius:999px}
+.dot{width:7px;height:7px;border-radius:50%;background:var(--muted)}
+.dot.live{background:var(--ok)}
+
+main{padding-block:22px 48px}
+.view[hidden]{display:none!important}
+.lead{color:var(--muted);max-width:62ch;margin:6px 0 0}
+.sec-head{display:flex;align-items:baseline;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-bottom:14px}
+.eyebrow{font-family:var(--mono);font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+
+/* filtre */
+.filters{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px;margin-bottom:18px}
+.field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.field label{font-size:11.5px;font-weight:600;color:var(--muted);letter-spacing:.02em}
+.field input,.field select{background:var(--surface-2);border:1px solid var(--line);color:var(--ink);border-radius:7px;padding:8px 9px;font:inherit;font-size:13.5px;min-width:0}
+
+/* ilan */
+.list{display:flex;flex-direction:column;gap:12px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:12px}
+.card-top{display:flex;gap:12px;align-items:flex-start;flex-wrap:wrap}
+.card h3{font-size:16.5px;font-weight:600;min-width:0;flex:1 1 240px}
+.badges{display:flex;gap:6px;flex-wrap:wrap}
+.badge{font-size:11px;font-weight:600;letter-spacing:.04em;padding:3px 8px;border-radius:5px;text-transform:uppercase;font-family:var(--mono)}
+.badge.satim{background:var(--accent-soft);color:var(--accent)}
+.badge.alim{background:var(--signal-soft);color:var(--signal)}
+.badge.suresiz{background:var(--surface-2);color:var(--muted);border:1px solid var(--line)}
+.specs{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:10px 18px}
+.spec{min-width:0}
+.spec dt{font-size:11px;color:var(--muted);margin-bottom:2px}
+.spec dd{margin:0;font-size:13.5px;font-family:var(--mono);font-variant-numeric:tabular-nums;overflow-wrap:anywhere}
+.contact{border-top:1px solid var(--line);padding-top:12px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.contact-data{display:flex;gap:16px;flex-wrap:wrap;font-family:var(--mono);font-size:13px;min-width:0}
+.locked .contact-data{filter:blur(5px);user-select:none}
+.lock-note{font-size:12.5px;color:var(--muted)}
+.btn{background:var(--accent);color:var(--on-accent);border:0;padding:8px 14px;border-radius:7px;font-weight:600;font-size:13.5px}
+.btn.ghost{background:transparent;color:var(--accent);border:1px solid var(--accent)}
+.btn.sm{padding:6px 11px;font-size:12.5px}
+
+/* paketler */
+.bill-toggle{display:inline-flex;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.bill-toggle button{background:none;border:0;padding:6px 14px;border-radius:999px;font-size:13px;color:var(--muted);font-weight:500}
+.bill-toggle button[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);font-weight:600}
+.plans{display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:14px}
+.plan{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:18px;display:flex;flex-direction:column;gap:14px}
+.plan.featured{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.plan-name{font-family:var(--display);font-weight:700;font-size:15px}
+.price{font-family:var(--display);font-size:30px;font-weight:700;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+.price small{font-size:13px;font-weight:500;color:var(--muted);font-family:var(--body)}
+.feats{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:8px;font-size:13.5px;flex:1}
+.feats li{display:flex;gap:8px;align-items:flex-start}
+.feats li::before{content:"";flex:0 0 auto;width:15px;height:15px;margin-top:3px;border-radius:4px;background:var(--accent-soft);border:1px solid var(--accent)}
+.feats li.off{color:var(--muted)}
+.feats li.off::before{background:transparent;border-color:var(--line)}
+
+/* panel */
+.grid-2{display:grid;grid-template-columns:repeat(auto-fit,minmax(270px,1fr));gap:14px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:16px;display:grid;gap:12px;min-width:0}
+.panel h3{font-size:14px;font-weight:600}
+.meter{height:7px;background:var(--surface-2);border:1px solid var(--line);border-radius:999px;overflow:hidden}
+.meter span{display:block;height:100%;background:var(--accent)}
+.kv{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:7px 0;border-bottom:1px solid var(--line)}
+.kv:last-child{border-bottom:0}
+.kv b{font-family:var(--mono);font-weight:500;font-variant-numeric:tabular-nums}
+.switch{display:flex;align-items:center;justify-content:space-between;gap:12px;font-size:13.5px;padding:7px 0}
+.sw{width:38px;height:21px;border-radius:999px;background:var(--line);border:0;position:relative;flex:0 0 auto;transition:background .15s}
+.sw::after{content:"";position:absolute;top:2px;left:2px;width:17px;height:17px;border-radius:50%;background:var(--surface);transition:transform .15s}
+.sw[aria-pressed="true"]{background:var(--accent)}
+.sw[aria-pressed="true"]::after{transform:translateX(17px)}
+.auth-row{display:flex;gap:9px;flex-wrap:wrap}
+.auth-btn{display:flex;align-items:center;gap:8px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink);padding:9px 13px;border-radius:7px;font-size:13.5px;font-weight:500}
+.verified{font-size:11.5px;color:var(--ok);font-family:var(--mono)}
+
+/* entegrasyon */
+pre{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);padding:14px;overflow-x:auto;margin:0;font-family:var(--mono);font-size:12.5px;line-height:1.65}
+.flow{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
+.step{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:12px 14px;flex:1 1 150px;min-width:0;display:grid;gap:4px;align-content:start}
+.step-n{font-family:var(--mono);font-size:11px;color:var(--accent);letter-spacing:.08em}
+.step b{font-size:13.5px;font-weight:600}
+.step p{margin:0;font-size:12.5px;color:var(--muted)}
+.note{background:var(--signal-soft);border:1px solid var(--line);border-left:3px solid var(--signal);border-radius:7px;padding:12px 14px;font-size:13px;margin-top:16px}
+footer{border-top:1px solid var(--line);margin-top:34px;padding-top:16px;font-size:12.5px;color:var(--muted)}
+</style>
+</head>
+<body>
+<header class="topbar">
+  <div class="wrap">
+    <div class="brand"><span class="mark">TK</span>TicaretKöprü</div>
+    <span class="demo-tag">Demo</span>
+    <span class="spacer"></span>
+    <span class="member-chip"><span class="dot" id="memberDot"></span><span id="memberLabel">Üyelik yok</span></span>
+    <button class="btn ghost sm" id="demoToggle">Demo: üyeliği aç</button>
+    <nav class="tabs" role="tablist">
+      <button class="tab" role="tab" aria-selected="true" data-view="ilanlar">İlanlar</button>
+      <button class="tab" role="tab" aria-selected="false" data-view="paketler">Üyelik Paketleri</button>
+      <button class="tab" role="tab" aria-selected="false" data-view="panel">Üye Paneli</button>
+      <button class="tab" role="tab" aria-selected="false" data-view="entegrasyon">Entegrasyon</button>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap">
+
+  <section class="view" id="view-ilanlar">
+    <div class="sec-head">
+      <div>
+        <h1>İhracat ve ithalat ilanları</h1>
+        <p class="lead">İlanlar süresiz yayında kalır, kendiniz kapatana kadar listeden düşmez. Firma iletişim bilgileri yalnızca aktif üyeliklerde görünür.</p>
+      </div>
+    </div>
+
+    <div class="filters">
+      <div class="field"><label for="f-urun">Ürün / anahtar kelime</label><input id="f-urun" type="text" placeholder="zeytinyağı, granül..."></div>
+      <div class="field"><label for="f-tip">İlan tipi</label><select id="f-tip"><option>Tümü</option><option>Satım</option><option>Alım</option></select></div>
+      <div class="field"><label for="f-ulke">Ülke</label><select id="f-ulke"><option>Tümü</option><option>Türkiye</option><option>Almanya</option><option>İtalya</option><option>BAE</option></select></div>
+      <div class="field"><label for="f-hs">GTİP / HS kodu</label><input id="f-hs" type="text" placeholder="1509.20"></div>
+    </div>
+
+    <div class="list" id="ilanList"></div>
+  </section>
+
+  <section class="view" id="view-paketler" hidden>
+    <div class="sec-head">
+      <div>
+        <h1>Üyelik paketleri</h1>
+        <p class="lead">Abonelik aylık ya da yıllık yenilenir. Paket bitiminde ilanlar yayında kalır, yalnızca iletişim görüntüleme kapanır.</p>
+      </div>
+      <div class="bill-toggle">
+        <button id="aylik" aria-pressed="true">Aylık</button>
+        <button id="yillik" aria-pressed="false">Yıllık · %20</button>
+      </div>
+    </div>
+    <div class="plans" id="plans"></div>
+    <div class="note"><b>Not:</b> Fiyatlar demo amaçlıdır, görüşmede netleştirilecektir. Ödeme altyapısı (sanal POS / yurt dışı tahsilat) seçimi kapsamı doğrudan etkiler.</div>
+  </section>
+
+  <section class="view" id="view-panel" hidden>
+    <div class="sec-head"><div><h1>Üye paneli</h1><p class="lead">Mehmet Yıldız · Yıldız Dış Ticaret Ltd. Şti. · Bursa</p></div></div>
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Abonelik durumu</h3>
+        <div class="kv"><span>Paket</span><b id="pnlPaket">—</b></div>
+        <div class="kv"><span>Bitiş tarihi</span><b id="pnlBitis">—</b></div>
+        <div class="kv"><span>Kalan gün</span><b id="pnlGun">—</b></div>
+        <div>
+          <div class="kv" style="border:0;padding-bottom:4px"><span>İletişim görüntüleme hakkı</span><b id="pnlHak">0 / 0</b></div>
+          <div class="meter"><span id="pnlMeter" style="width:0%"></span></div>
+        </div>
+        <button class="btn sm" data-goto="paketler">Paketi yükselt</button>
+      </div>
+
+      <div class="panel">
+        <h3>Hesap ve doğrulama</h3>
+        <div class="auth-row">
+          <button class="auth-btn" id="googleBtn"><span aria-hidden="true">G</span> Google ile bağla</button>
+          <button class="auth-btn" id="telBtn"><span aria-hidden="true">☏</span> Telefon doğrula</button>
+        </div>
+        <div class="kv"><span>E-posta</span><b>m.yildiz@yildizdis.com.tr</b></div>
+        <div class="kv"><span>Telefon</span><b>+90 533 ••• •• 79 <span class="verified" id="telDurum" hidden>doğrulandı</span></b></div>
+        <div class="kv"><span>Vergi no</span><b>461 •••• 821</b></div>
+      </div>
+
+      <div class="panel">
+        <h3>Bildirimler</h3>
+        <div class="switch"><span>Yeni ilan e-postası (günlük özet)</span><button class="sw" aria-pressed="true" aria-label="Günlük özet"></button></div>
+        <div class="switch"><span>Takip ettiğim GTİP kodunda ilan</span><button class="sw" aria-pressed="true" aria-label="GTİP bildirimi"></button></div>
+        <div class="switch"><span>Teklif geldiğinde SMS</span><button class="sw" aria-pressed="false" aria-label="SMS bildirimi"></button></div>
+        <div class="switch"><span>Abonelik bitimine 7 gün kala hatırlat</span><button class="sw" aria-pressed="true" aria-label="Abonelik hatırlatma"></button></div>
+      </div>
+
+      <div class="panel">
+        <h3>İlanlarım</h3>
+        <div class="kv"><span>Kuru incir · 0804.20</span><b>142 görüntülenme</b></div>
+        <div class="kv"><span>Mermer blok · 2515.11</span><b>87 görüntülenme</b></div>
+        <div class="kv"><span>Yayın hakkı</span><b id="pnlIlanHak">0 / 0</b></div>
+        <button class="btn sm ghost">Yeni ilan ekle</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="view" id="view-entegrasyon" hidden>
+    <div class="sec-head"><div><h1>Python ve e-posta entegrasyonu</h1><p class="lead">Mevcut sisteminizdeki ürün listesi otomatik olarak ilanlara aktarılır, gelen talepler e-posta ile size düşer.</p></div></div>
+
+    <div class="flow">
+      <div class="step"><span class="step-n">01</span><b>Veri kaynağı</b><p>Excel, ERP veya veritabanınızdaki ürün listesi</p></div>
+      <div class="step"><span class="step-n">02</span><b>Python servisi</b><p>Listeyi okur, GTİP ve miktar alanlarını eşler</p></div>
+      <div class="step"><span class="step-n">03</span><b>API aktarımı</b><p>İlanlar siteye yazılır veya güncellenir</p></div>
+      <div class="step"><span class="step-n">04</span><b>E-posta bildirimi</b><p>Gelen teklif ilgili yetkiliye iletilir</p></div>
+    </div>
+
+    <h3 style="margin:22px 0 10px;font-size:14px">Örnek: toplu ilan aktarımı</h3>
+<pre><code>import requests
+
+API = "https://api.ticaretkopru.com/v1"
+HEADERS = {"Authorization": "Bearer &lt;firma_anahtari&gt;"}
+
+def ilan_aktar(urun):
+    veri = {
+        "tip": "satim",
+        "baslik": urun["ad"],
+        "gtip": urun["hs_kodu"],
+        "miktar": urun["miktar_mt"],
+        "birim": "MT",
+        "teslim": urun["incoterm"],      # FOB / CIF / EXW
+        "liman": urun["cikis_limani"],
+        "suresiz": True,                 # ilan kendiliğinden kapanmaz
+    }
+    cevap = requests.post(f"{API}/ilanlar", json=veri, headers=HEADERS, timeout=20)
+    cevap.raise_for_status()
+    return cevap.json()["ilan_id"]
+
+for urun in excel_satirlari("urunler.xlsx"):
+    print(urun["ad"], "→", ilan_aktar(urun))</code></pre>
+
+    <h3 style="margin:22px 0 10px;font-size:14px">Teklif geldiğinde e-posta</h3>
+<pre><code>POST /webhook/teklif
+
+{
+  "ilan_id": 10472,
+  "gonderen": "Rossi Import SRL",
+  "ulke": "İtalya",
+  "miktar": 120,
+  "mesaj": "FOB İzmir fiyatınızı rica ederiz."
+}
+
+→ satis@firmaniz.com adresine bildirim
+→ panelde "Yeni teklif" olarak listelenir</code></pre>
+
+    <div class="note"><b>Netleştirilecek:</b> Python servisinin dışarıdan veri mi çekeceği yoksa mevcut programınızla mı konuşacağı, ve e-posta gönderiminde kendi alan adınızın mı kullanılacağı.</div>
+  </section>
+
+  <footer>Bu bir ön tasarım demosudur. İçerikler örnektir, gerçek firma ve ilan bilgisi içermez. · Hazırlayan: Enes Talha Köse</footer>
+</main>
+
+<script>
+(function(){
+  var ilanlar = [
+    {tip:"satim", baslik:"Sızma zeytinyağı · dökme", hs:"1509.20", miktar:"500 MT / yıl", inco:"FOB İzmir", ulke:"Türkiye", firma:"Ege Oliva Gıda A.Ş.", tel:"+90 232 441 •• ••", mail:"export@egeoliva.com.tr"},
+    {tip:"alim", baslik:"Alüminyum profil alımı", hs:"7604.21", miktar:"80 MT / ay", inco:"CIF Hamburg", ulke:"Almanya", firma:"Nordbau Metall GmbH", tel:"+49 40 7788 ••", mail:"einkauf@nordbau.de"},
+    {tip:"satim", baslik:"Kuru incir · Lerida 6'lı", hs:"0804.20", miktar:"24 konteyner / sezon", inco:"FOB Mersin", ulke:"Türkiye", firma:"Yıldız Dış Ticaret Ltd.", tel:"+90 533 ••• •• 79", mail:"m.yildiz@yildizdis.com.tr"},
+    {tip:"alim", baslik:"PP granül alımı · homopolimer", hs:"3902.10", miktar:"200 MT / ay", inco:"CIF Ambarlı", ulke:"Türkiye", firma:"Marmara Polimer San.", tel:"+90 212 886 •• ••", mail:"satinalma@marmarapolimer.com"},
+    {tip:"satim", baslik:"Örme kumaş · single jersey", hs:"6006.32", miktar:"45.000 m / ay", inco:"EXW Bursa", ulke:"Türkiye", firma:"Uludağ Tekstil", tel:"+90 224 215 •• ••", mail:"sales@uludagtekstil.com"},
+    {tip:"alim", baslik:"Mermer blok alımı · beyaz", hs:"2515.11", miktar:"40 konteyner / ay", inco:"FOB Bandırma", ulke:"BAE", firma:"Al Marsa Trading LLC", tel:"+971 4 332 ••••", mail:"procurement@almarsa.ae"}
+  ];
+
+  var uye = false;
+  var planlar = [
+    {ad:"Başlangıç", aylik:450, iletisim:"Ayda 10 iletişim görüntüleme", ilan:"3 aktif ilan", feats:[["Süresiz ilan yayını",1],["Günlük e-posta özeti",1],["Telefon doğrulama",1],["GTİP bazlı bildirim",0],["Python / API entegrasyonu",0]]},
+    {ad:"Profesyonel", aylik:1200, one:true, iletisim:"Ayda 60 iletişim görüntüleme", ilan:"15 aktif ilan", feats:[["Süresiz ilan yayını",1],["Günlük e-posta özeti",1],["Telefon doğrulama",1],["GTİP bazlı bildirim",1],["Python / API entegrasyonu",0]]},
+    {ad:"Kurumsal", aylik:2900, iletisim:"Sınırsız iletişim görüntüleme", ilan:"Sınırsız ilan", feats:[["Süresiz ilan yayını",1],["Günlük e-posta özeti",1],["Telefon doğrulama",1],["GTİP bazlı bildirim",1],["Python / API entegrasyonu",1]]}
+  ];
+
+  function el(tag, cls, html){var n=document.createElement(tag); if(cls)n.className=cls; if(html!=null)n.innerHTML=html; return n;}
+
+  function cizIlanlar(){
+    var liste = document.getElementById("ilanList");
+    liste.innerHTML = "";
+    ilanlar.forEach(function(i){
+      var c = el("article","card"+(uye?"":" locked"));
+      var top = el("div","card-top");
+      top.appendChild(el("h3",null,i.baslik));
+      var b = el("div","badges");
+      b.appendChild(el("span","badge "+(i.tip==="satim"?"satim":"alim"), i.tip==="satim"?"Satım":"Alım"));
+      b.appendChild(el("span","badge suresiz","Süresiz"));
+      top.appendChild(b);
+      c.appendChild(top);
+
+      var dl = el("dl","specs");
+      [["GTİP",i.hs],["Miktar",i.miktar],["Teslim",i.inco],["Ülke",i.ulke]].forEach(function(p){
+        var d = el("div","spec");
+        d.appendChild(el("dt",null,p[0]));
+        d.appendChild(el("dd",null,p[1]));
+        dl.appendChild(d);
+      });
+      c.appendChild(dl);
+
+      var ct = el("div","contact");
+      var data = el("div","contact-data");
+      data.appendChild(el("span",null,i.firma));
+      data.appendChild(el("span",null,i.tel));
+      data.appendChild(el("span",null,i.mail));
+      ct.appendChild(data);
+      if(uye){
+        ct.appendChild(el("span","lock-note","İletişim hakkı kullanıldı"));
+      }else{
+        var btn = el("button","btn sm","Üye ol, iletişime geç");
+        btn.addEventListener("click", function(){ gecis("paketler"); });
+        ct.appendChild(btn);
+      }
+      c.appendChild(ct);
+      liste.appendChild(c);
+    });
+  }
+
+  var yillikMi = false;
+  function cizPlanlar(){
+    var k = document.getElementById("plans");
+    k.innerHTML = "";
+    planlar.forEach(function(p){
+      var fiyat = yillikMi ? Math.round(p.aylik*12*0.8) : p.aylik;
+      var n = el("div","plan"+(p.one?" featured":""));
+      n.appendChild(el("div","plan-name",p.ad));
+      n.appendChild(el("div","price", fiyat.toLocaleString("tr-TR")+" ₺ <small>/ "+(yillikMi?"yıl":"ay")+"</small>"));
+      var ul = el("ul","feats");
+      ul.appendChild(el("li",null,"<span>"+p.ilan+"</span>"));
+      ul.appendChild(el("li",null,"<span>"+p.iletisim+"</span>"));
+      p.feats.forEach(function(f){ ul.appendChild(el("li", f[1]?"":"off", "<span>"+f[0]+"</span>")); });
+      n.appendChild(ul);
+      var b = el("button","btn"+(p.one?"":" ghost"), uye?"Bu pakete geç":"Paketi seç");
+      b.addEventListener("click", function(){ uye=true; guncelleUyelik(); gecis("panel"); });
+      n.appendChild(b);
+      k.appendChild(n);
+    });
+  }
+
+  function guncelleUyelik(){
+    document.getElementById("memberLabel").textContent = uye ? "Profesyonel · aktif" : "Üyelik yok";
+    document.getElementById("memberDot").className = "dot"+(uye?" live":"");
+    document.getElementById("demoToggle").textContent = uye ? "Demo: üyeliği kapat" : "Demo: üyeliği aç";
+    document.getElementById("pnlPaket").textContent = uye ? "Profesyonel" : "—";
+    document.getElementById("pnlBitis").textContent = uye ? "09.12.2026" : "—";
+    document.getElementById("pnlGun").textContent = uye ? "30 gün" : "—";
+    document.getElementById("pnlHak").textContent = uye ? "18 / 60" : "0 / 0";
+    document.getElementById("pnlIlanHak").textContent = uye ? "2 / 15" : "0 / 3";
+    document.getElementById("pnlMeter").style.width = uye ? "30%" : "0%";
+    cizIlanlar(); cizPlanlar();
+  }
+
+  function gecis(ad){
+    document.querySelectorAll(".tab").forEach(function(t){
+      t.setAttribute("aria-selected", String(t.dataset.view===ad));
+    });
+    document.querySelectorAll(".view").forEach(function(v){
+      v.hidden = (v.id !== "view-"+ad);
+    });
+    window.scrollTo({top:0, behavior:"smooth"});
+  }
+
+  document.querySelectorAll(".tab").forEach(function(t){
+    t.addEventListener("click", function(){ gecis(t.dataset.view); });
+  });
+  document.querySelectorAll("[data-goto]").forEach(function(b){
+    b.addEventListener("click", function(){ gecis(b.dataset.goto); });
+  });
+  document.getElementById("demoToggle").addEventListener("click", function(){ uye = !uye; guncelleUyelik(); });
+  document.getElementById("aylik").addEventListener("click", function(){
+    yillikMi=false; this.setAttribute("aria-pressed","true"); document.getElementById("yillik").setAttribute("aria-pressed","false"); cizPlanlar();
+  });
+  document.getElementById("yillik").addEventListener("click", function(){
+    yillikMi=true; this.setAttribute("aria-pressed","true"); document.getElementById("aylik").setAttribute("aria-pressed","false"); cizPlanlar();
+  });
+  document.querySelectorAll(".sw").forEach(function(s){
+    s.addEventListener("click", function(){
+      s.setAttribute("aria-pressed", s.getAttribute("aria-pressed")==="true" ? "false" : "true");
+    });
+  });
+  document.getElementById("telBtn").addEventListener("click", function(){
+    document.getElementById("telDurum").hidden = false;
+    this.textContent = "☏ Telefon doğrulandı";
+  });
+  document.getElementById("googleBtn").addEventListener("click", function(){
+    this.textContent = "G Google hesabı bağlı";
+  });
+
+  guncelleUyelik();
+})();
+</script>
+</body>
+</html>
